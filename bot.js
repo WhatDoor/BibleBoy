@@ -55,10 +55,10 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
         book = checkAbbriev(book)
         chapter = reference.split(":")[0]
         verse = reference.split(":")[1]
-        
+
         try {
             returnMessage = bible[book][chapter][verse]
-        } catch (error) {       
+        } catch (error) {
             returnMessage = ""
         }
 
@@ -68,12 +68,12 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
 
         bot.sendMessage({
             to: channelID,
-            message: ("**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage) //Append reference before sending
+            message: ("```**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage + "```") //Append reference before sending
         });
-        
+
     } else if (wholeChapRegex.test(message)) {
         returnMessage = ""
-        
+
         if (message[0] >= '0' && message[0] <= '9') { //For books with numbers before them
             book = message.split(" ")[0] + " " + message.split(" ")[1].toLowerCase()
             chapter = message.split(" ")[2]
@@ -122,7 +122,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
                 returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
                 startIndex = startIndex + 1900
                 endIndex = endIndex + 1900
-                charactersSent = charactersSent + 1900                
+                charactersSent = charactersSent + 1900
 
                 bot.sendMessage({
                     to: channelID,
@@ -147,7 +147,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
         } else {
             bot.sendMessage({
                 to: channelID,
-                message: ("**" + titleCase.titleCase(book) + " " + chapter + "**\n" + returnMessage) //Append reference before sending
+                message: ("```**" + titleCase.titleCase(book) + " " + chapter + "**\n" + returnMessage + "```") //Append reference before sending
             });
         }
 
@@ -171,7 +171,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
 
         console.log(currentVerse)
         console.log(endVerse)
-        
+
         console.log("Going into the loop...")
         console.log(currentVerse <= endVerse)
 
@@ -186,12 +186,12 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
                 }
                 currentVerse++;
                 count++;
-            }            
+            }
         } catch (error) {
             returnMessage = ""
             console.log("error in retrieving range within chapter")
         }
-        
+
         if (returnMessage == "" || returnMessage === undefined) {
             returnMessage = "Reference not found :("
         }
@@ -216,7 +216,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
                 returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
                 startIndex = startIndex + 1900
                 endIndex = endIndex + 1900
-                charactersSent = charactersSent + 1900                
+                charactersSent = charactersSent + 1900
 
                 bot.sendMessage({
                     to: channelID,
@@ -241,7 +241,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
         } else {
             bot.sendMessage({
                 to: channelID,
-                message: ("**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage) //Append reference before sending
+                message: ("```**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage + "```") //Append reference before sending
             });
         }
     } else if (rangeAcrossRegex.test(message)) {
@@ -267,7 +267,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
         endVerse = parseInt(endRef.split(":")[1])
 
         //e.g. genesis 3:1-4:12 - would need to somehow find out what is the last verse of the current chapter... and future chapters...
-        
+
 
         if (returnMessage.length > 1900) {
             bot.sendMessage({
@@ -289,7 +289,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
                 returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
                 startIndex = startIndex + 1900
                 endIndex = endIndex + 1900
-                charactersSent = charactersSent + 1900                
+                charactersSent = charactersSent + 1900
 
                 bot.sendMessage({
                     to: channelID,
