@@ -11,6 +11,7 @@ A discord bot that posts NIV bible passages when referenced in chat
 4. run with: node bot.js
 
 # Use cases
+When you type a message of one of the following categories into a text server, BibleBoy will respond as appropriate
 1. Specific Reference (e.g. Gen 1:1)
 
 2. Whole Chapter (e.g. Gen 1)
