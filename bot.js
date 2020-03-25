@@ -144,6 +144,14 @@ client.on('message', async message => {
         endChap = parseInt(endRef.split(":")[0])
         endVerse = parseInt(endRef.split(":")[1])
 
+        //get all verses of the first chapter
+
+
+        //get all verses of the middle chapters
+
+
+        //get all verses of the final chapter
+
         //e.g. genesis 3:1-4:12 - would need to somehow find out what is the last verse of the current chapter... and future chapters...
         //IDEA: Iterate through the current chapter, and find the highest number in it
         returnMessage = "Sorry, I can't do that yet :(" //temp message
@@ -152,29 +160,47 @@ client.on('message', async message => {
     }
 })
 
+function getLastVerseOfChapter(chapter) {
+    lastVerse = 1
+
+    for (verse in chapter) {
+        if (verse > lastVerse)
+            lastVerse = verse
+    }
+
+    return lastVerse
+}
+
 //If message is over 1900 characters long, then use this function to split it. Returns an array of messages shorter than 1900 characters
 function messageSplit(returnMessage) {
-    remainingMessage = returnMessage
     startIndex = 0
     endIndex = 1900
 
-    messageLength = returnMessage.length
     charactersSent = 0;
 
     returnArray = []
 
-    while (messageLength - charactersSent > 1900) {
-        returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
-        startIndex = startIndex + 1900
-        endIndex = endIndex + 1900
-        charactersSent = charactersSent + 1900
+    //Splits text into chunks of 1900 characters
+    while (returnMessage.length - charactersSent > 1900) {
+        slicedMessageLength = 1900
 
-        returnArray.push(returnMessage)
+        //Adjusting endIndex to complete word
+        while (returnMessage.charAt(endIndex-1) != " ") {
+            endIndex++
+            slicedMessageLength++
+        }
+
+        slicedMessage = returnMessage.slice(startIndex,endIndex) + "-";
+        
+        startIndex = startIndex + slicedMessageLength
+        endIndex = endIndex + 1900
+        charactersSent = charactersSent + slicedMessageLength
+
+        returnArray.push(slicedMessage)
     }
 
     //Push whatever is left of the message
-    returnMessage = remainingMessage.slice(startIndex);
-    returnArray.push(returnMessage)
+    returnArray.push(returnMessage.slice(startIndex));
 
     return returnArray
 }
