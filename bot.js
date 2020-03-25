@@ -28,6 +28,8 @@ client.on('message', async message => {
     //Only triggers code if message falls into one of the possible categories
     messageText = message.content
 
+    //TODO - delimit by ';' and deal with each message separately
+
     //Define Regexes
     //Specific Verse
     const specificVerseRegex = RegExp("^(1 |2 |3 |)\\w+ [0-9]+:[0-9]+$",'gi')
@@ -40,6 +42,9 @@ client.on('message', async message => {
 
     //Range accross chapters
     const rangeAcrossRegex = RegExp("^(1 |2 |3 |)\\w+ [0-9]+:[0-9]+-[0-9]+:[0-9]+$",'gi')
+
+    //Whole Chapter ranges
+    const wholeChapRange = RegExp("^(1 |2 |3 |)\\w+ [0-9]+-[0-9]+$",'gi')
 
     if (specificVerseRegex.test(messageText)) {
         returnMessage = ""
@@ -58,9 +63,7 @@ client.on('message', async message => {
             returnMessage = ""
         }
 
-        if (returnMessage == "" || returnMessage === undefined) {
-            returnMessage = "Reference not found :("
-        }
+        returnMessage = messageCheck(returnMessage)
 
         deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
 
@@ -72,24 +75,10 @@ client.on('message', async message => {
         book = bookAndRef[0]
         chapter = bookAndRef[1]
 
-        //Retrieve all verses within the chapter and append it returnMessage
-        try {
-            count = 1
-            for (const verseNum in bible[book][chapter]) {
-                if (count == 1) {
-                    returnMessage = returnMessage + verseNum + " " + bible[book][chapter][verseNum]
-                } else {
-                    returnMessage = returnMessage + " " + verseNum + " " + bible[book][chapter][verseNum]
-                }
-                count++;
-            }
-        } catch (error) {
-            returnMessage = ""
-        }
+        returnMessage = getAllTextOfChapter(bible[book][chapter])
 
         returnMessage = messageCheck(returnMessage)
 
-        //Check if message is too long and handle message delivery
         deliverMessage(titleCase.titleCase(book) + " " + chapter, returnMessage, message.channel)
 
     } else if (rangeWithinRegex.test(messageText)) {
@@ -103,28 +92,11 @@ client.on('message', async message => {
         chapter = reference.split(":")[0]
         startVerse = parseInt(reference.split(":")[1].split("-")[0])
         endVerse = parseInt(reference.split(":")[1].split("-")[1])
-        currentVerse = startVerse
 
-        //Retrieve all verses within the range and append it to returnMessage
-        try {
-            count = 1
-            while (currentVerse <= endVerse) {
-                if (count == 1) {
-                    returnMessage = returnMessage + currentVerse + " " + bible[book][chapter][currentVerse]
-                } else {
-                    returnMessage = returnMessage + " " + currentVerse + " " + bible[book][chapter][currentVerse]
-                }
-                currentVerse++;
-                count++;
-            }
-        } catch (error) {
-            returnMessage = ""
-            console.log("error in retrieving range within chapter")
-        }
+        returnMessage = getRangeofTextInChapter(bible[book][chapter], startVerse, endVerse)
 
         returnMessage = messageCheck(returnMessage)
 
-        //Check if message is too long and handle message delivery
         deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
 
     } else if (rangeAcrossRegex.test(messageText)) {
@@ -145,29 +117,98 @@ client.on('message', async message => {
         endVerse = parseInt(endRef.split(":")[1])
 
         //get all verses of the first chapter
-
+        endVerseOfFirstChap = getLastVerseOfChapter(bible[book][startChap])
+        returnMessage = "**Chapter " + startChap + "**\n" + getRangeofTextInChapter(bible[book][startChap], startVerse, endVerseOfFirstChap)
 
         //get all verses of the middle chapters
+        currentChap = startChap + 1
 
+        while (currentChap < endChap) {
+            returnMessage = returnMessage + "\n\n**Chapter " + currentChap + "**\n" + getAllTextOfChapter(bible[book][currentChap])
+            currentChap++
+        }
 
         //get all verses of the final chapter
+        returnMessage = returnMessage + "\n\n**Chapter " + currentChap + "**\n" + getRangeofTextInChapter(bible[book][endChap], 1, endVerse)
 
-        //e.g. genesis 3:1-4:12 - would need to somehow find out what is the last verse of the current chapter... and future chapters...
-        //IDEA: Iterate through the current chapter, and find the highest number in it
-        returnMessage = "Sorry, I can't do that yet :(" //temp message
+        returnMessage = messageCheck(returnMessage)
+
+        deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
+
+    } else if (wholeChapRange.test(messageText)) {
+        returnMessage = ""
+
+        bookAndRef = getBookandReference(messageText)
+
+        book = bookAndRef[0]
+        reference = bookAndRef[1]
+
+        startChap = parseInt(reference.split("-")[0])
+        endChap = parseInt(reference.split("-")[1])
+
+        while (startChap <= endChap) {
+            returnMessage = returnMessage + "**Chapter " + startChap + "**\n" + getAllTextOfChapter(bible[book][startChap]) + "\n\n"
+            startChap++
+        }
+
+        returnMessage = messageCheck(returnMessage)
 
         deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
     }
 })
 
+
+function getRangeofTextInChapter(chapter, current, end) { //INCLUSIVE OF END VERSE
+    returnMessage = ""
+
+    try {
+        count = 1
+        while (current <= end) {
+            if (count == 1) {
+                returnMessage = returnMessage + current + " " + chapter[current]
+            } else {
+                returnMessage = returnMessage + " " + current + " " + chapter[current]
+            }
+            current++;
+            count++;
+        }
+    } catch (error) {
+        returnMessage = ""
+        console.log("error in retrieving range within chapter")
+    }
+
+    return returnMessage
+}
+
+function getAllTextOfChapter(chapter) {
+    returnMessage = ""
+
+    try {
+        count = 1
+        for (const verseNum in chapter) {
+            if (count == 1) {
+                returnMessage = returnMessage + verseNum + " " + chapter[verseNum]
+            } else {
+                returnMessage = returnMessage + " " + verseNum + " " + chapter[verseNum]
+            }
+            count++;
+        }
+    } catch (error) {
+        returnMessage = ""
+        console.log("error in retrieving whole chapter")
+    }
+
+    return returnMessage
+}
+
 function getLastVerseOfChapter(chapter) {
     lastVerse = 1
 
-    for (verse in chapter) {
-        if (verse > lastVerse)
+    for (verse in chapter) {        
+        if (parseInt(verse) > lastVerse)
             lastVerse = verse
     }
-
+    
     return lastVerse
 }
 
