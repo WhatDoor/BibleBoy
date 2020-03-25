@@ -17,6 +17,8 @@ When you type a message of one of the following categories into a text server, B
 
 2. Whole Chapter (e.g. Gen 1)
 
+3. Range of chapters (e.g. Gen 1-2)
+
 3. Range of verses wihtin a chapter (e.g. Gen 1:1-3)
 
-4. (NOT YET BUILT) Range of verses crossing chapters (e.g. Gen 1:1-2:3)
+4. Range of verses crossing chapters (e.g. Gen 1:1-2:3)
