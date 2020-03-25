@@ -1,4 +1,4 @@
-var Discord = require('discord.io');
+var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
 var fs = require('fs');
@@ -14,18 +14,19 @@ logger.add(new logger.transports.Console, {
     colorize: true
 });
 logger.level = 'debug';
+
 // Initialize Discord Bot
-var bot = new Discord.Client({
-   token: auth.token,
-   autorun: true
+const client = new Discord.Client();
+
+client.once('ready', () => {
+    console.log("ready!");    
 });
-bot.on('ready', function (evt) {
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(bot.username + ' - (' + bot.id + ')');
-});
-bot.on('message', async function (user, userID, channelID, message, evt) {
+
+client.login(auth.token)
+
+client.on('message', async message => {
     //Only triggers code if message falls into one of the possible categories
+    messageText = message.content
 
     //Define Regexes
     //Specific Verse
@@ -40,15 +41,15 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
     //Range accross chapters
     const rangeAcrossRegex = RegExp("^(1 |2 |3 |)\\w+ [0-9]+:[0-9]+-[0-9]+:[0-9]+$",'gi')
 
-    if (specificVerseRegex.test(message)) {
+    if (specificVerseRegex.test(messageText)) {
         returnMessage = ""
 
-        if (message[0] >= '0' && message[0] <= '9') { //For books with numbers before them
-            book = message.split(" ")[0] + " " + message.split(" ")[1].toLowerCase()
-            reference = message.split(" ")[2]
+        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
+            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
+            reference = messageText.split(" ")[2]
         } else { //All other cases
-            book = message.split(" ")[0].toLowerCase()
-            reference = message.split(" ")[1]
+            book = messageText.split(" ")[0].toLowerCase()
+            reference = messageText.split(" ")[1]
         }
 
         book = book.toLowerCase()
@@ -66,20 +67,18 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
             returnMessage = "Reference not found :("
         }
 
-        bot.sendMessage({
-            to: channelID,
-            message: ("```**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage + "```") //Append reference before sending
-        });
+        //SEND MESSAGE!
+        message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage)
 
-    } else if (wholeChapRegex.test(message)) {
+    } else if (wholeChapRegex.test(messageText)) {
         returnMessage = ""
 
-        if (message[0] >= '0' && message[0] <= '9') { //For books with numbers before them
-            book = message.split(" ")[0] + " " + message.split(" ")[1].toLowerCase()
-            chapter = message.split(" ")[2]
+        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
+            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
+            chapter = messageText.split(" ")[2]
         } else { //All other cases
-            book = message.split(" ")[0].toLowerCase()
-            chapter = message.split(" ")[1]
+            book = messageText.split(" ")[0].toLowerCase()
+            chapter = messageText.split(" ")[1]
         }
 
         book = checkAbbriev(book)
@@ -103,10 +102,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
         }
 
         if (returnMessage.length > 1900) {
-            bot.sendMessage({
-                to: channelID,
-                message: ("**" + titleCase.titleCase(book) + " " + chapter + "**")
-            });
+            message.channel.send("**" + titleCase.titleCase(book) + " " + chapter + "**")
             await new Promise(r => setTimeout(r, 100));
 
             remainingMessage = returnMessage
@@ -124,10 +120,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
                 endIndex = endIndex + 1900
                 charactersSent = charactersSent + 1900
 
-                bot.sendMessage({
-                    to: channelID,
-                    message: (returnMessage)
-                });
+                message.channel.send(returnMessage)
                 await new Promise(r => setTimeout(r, 100));
 
                 if (messageNum == 4) {
@@ -139,27 +132,21 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
             }
 
             returnMessage = remainingMessage.slice(startIndex);
-            bot.sendMessage({
-                to: channelID,
-                message: (returnMessage)
-            });
+            message.channel.send(returnMessage)
 
         } else {
-            bot.sendMessage({
-                to: channelID,
-                message: ("```**" + titleCase.titleCase(book) + " " + chapter + "**\n" + returnMessage + "```") //Append reference before sending
-            });
+            message.channel.send("**" + titleCase.titleCase(book) + " " + chapter + "**\n" + returnMessage + "")//Append reference before sending
         }
 
-    } else if (rangeWithinRegex.test(message)) {
+    } else if (rangeWithinRegex.test(messageText)) {
         returnMessage = ""
 
-        if (message[0] >= '0' && message[0] <= '9') { //For books with numbers before them
-            book = message.split(" ")[0] + " " + message.split(" ")[1].toLowerCase()
-            reference = message.split(" ")[2]
+        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
+            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
+            reference = messageText.split(" ")[2]
         } else { //All other cases
-            book = message.split(" ")[0].toLowerCase()
-            reference = message.split(" ")[1]
+            book = messageText.split(" ")[0].toLowerCase()
+            reference = messageText.split(" ")[1]
         }
 
         book = checkAbbriev(book)
@@ -168,12 +155,6 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
         startVerse = parseInt(reference.split(":")[1].split("-")[0])
         endVerse = parseInt(reference.split(":")[1].split("-")[1])
         currentVerse = startVerse
-
-        console.log(currentVerse)
-        console.log(endVerse)
-
-        console.log("Going into the loop...")
-        console.log(currentVerse <= endVerse)
 
         try {
             count = 1
@@ -197,10 +178,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
         }
 
         if (returnMessage.length > 1900) {
-            bot.sendMessage({
-                to: channelID,
-                message: ("**" + titleCase.titleCase(book) + " " + reference + "**")
-            });
+            message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**")
             await new Promise(r => setTimeout(r, 100));
 
             remainingMessage = returnMessage
@@ -218,10 +196,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
                 endIndex = endIndex + 1900
                 charactersSent = charactersSent + 1900
 
-                bot.sendMessage({
-                    to: channelID,
-                    message: (returnMessage)
-                });
+                message.channel.send(returnMessage)
                 await new Promise(r => setTimeout(r, 100));
 
                 if (messageNum == 4) {
@@ -233,26 +208,20 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
             }
 
             returnMessage = remainingMessage.slice(startIndex);
-            bot.sendMessage({
-                to: channelID,
-                message: (returnMessage)
-            });
+            message.channel.send(returnMessage)
 
         } else {
-            bot.sendMessage({
-                to: channelID,
-                message: ("```**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage + "```") //Append reference before sending
-            });
+            message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage + "") //Append reference before sending
         }
-    } else if (rangeAcrossRegex.test(message)) {
+    } else if (rangeAcrossRegex.test(messageText)) {
         returnMessage = ""
 
-        if (message[0] >= '0' && message[0] <= '9') { //For books with numbers before them
-            book = message.split(" ")[0] + " " + message.split(" ")[1].toLowerCase()
-            reference = message.split(" ")[2]
+        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
+            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
+            reference = messageText.split(" ")[2]
         } else { //All other cases
-            book = message.split(" ")[0].toLowerCase()
-            reference = message.split(" ")[1]
+            book = messageText.split(" ")[0].toLowerCase()
+            reference = messageText.split(" ")[1]
         }
 
         book = checkAbbriev(book)
@@ -270,10 +239,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
 
 
         if (returnMessage.length > 1900) {
-            bot.sendMessage({
-                to: channelID,
-                message: ("**" + titleCase.titleCase(book) + " " + reference + "**")
-            });
+            message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**")
             await new Promise(r => setTimeout(r, 100));
 
             remainingMessage = returnMessage
@@ -291,10 +257,7 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
                 endIndex = endIndex + 1900
                 charactersSent = charactersSent + 1900
 
-                bot.sendMessage({
-                    to: channelID,
-                    message: (returnMessage)
-                });
+                message.channel.send(returnMessage)
                 await new Promise(r => setTimeout(r, 100));
 
                 if (messageNum == 4) {
@@ -306,20 +269,13 @@ bot.on('message', async function (user, userID, channelID, message, evt) {
             }
 
             returnMessage = remainingMessage.slice(startIndex);
-            bot.sendMessage({
-                to: channelID,
-                message: (returnMessage)
-            });
+            message.channel.send(returnMessage)
 
         } else {
-            bot.sendMessage({
-                to: channelID,
-                message: "Sorry, I can't do that yet :("
-                //message: ("**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage) //Append reference before sending
-            });
+            message.channel.send("Sorry, I can't do that yet :(")
         }
     }
-});
+})
 
 function checkAbbriev(bookname) {
     switch (bookname) {
