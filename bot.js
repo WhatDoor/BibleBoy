@@ -145,7 +145,7 @@ client.on('message', async message => {
         endVerse = parseInt(endRef.split(":")[1])
 
         //e.g. genesis 3:1-4:12 - would need to somehow find out what is the last verse of the current chapter... and future chapters...
-        //BIG TODO HERE
+        //IDEA: Iterate through the current chapter, and find the highest number in it
         returnMessage = "Sorry, I can't do that yet :(" //temp message
 
         deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
