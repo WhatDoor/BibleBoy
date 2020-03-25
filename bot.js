@@ -28,8 +28,15 @@ client.on('message', async message => {
     //Only triggers code if message falls into one of the possible categories
     messageText = message.content
 
-    //TODO - delimit by ';' and deal with each message separately
+    //Accept more than 1 reference
+    messages = messageText.split(";")
 
+    for (text of messages) {
+        handleMessage(text.trim(), message)
+    }
+})
+
+function handleMessage(messageText, message) {
     //Define Regexes
     //Specific Verse
     const specificVerseRegex = RegExp("^(1 |2 |3 |)\\w+ [0-9]+:[0-9]+$",'gi')
@@ -155,10 +162,11 @@ client.on('message', async message => {
 
         deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
     }
-})
+}
 
 
-function getRangeofTextInChapter(chapter, current, end) { //INCLUSIVE OF END VERSE
+//Returns text of a given range in a chapter (inclusive of end verse)
+function getRangeofTextInChapter(chapter, current, end) { 
     returnMessage = ""
 
     try {
@@ -180,6 +188,7 @@ function getRangeofTextInChapter(chapter, current, end) { //INCLUSIVE OF END VER
     return returnMessage
 }
 
+//returns all the text of a chapter
 function getAllTextOfChapter(chapter) {
     returnMessage = ""
 
@@ -201,6 +210,7 @@ function getAllTextOfChapter(chapter) {
     return returnMessage
 }
 
+//Gets the last verse of a chapter 
 function getLastVerseOfChapter(chapter) {
     lastVerse = 1
 
