@@ -44,16 +44,11 @@ client.on('message', async message => {
     if (specificVerseRegex.test(messageText)) {
         returnMessage = ""
 
-        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
-            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
-            reference = messageText.split(" ")[2]
-        } else { //All other cases
-            book = messageText.split(" ")[0].toLowerCase()
-            reference = messageText.split(" ")[1]
-        }
+        bookAndRef = getBookandReference(messageText)
 
-        book = book.toLowerCase()
-        book = checkAbbriev(book)
+        book = bookAndRef[0]
+        reference = bookAndRef[1]
+
         chapter = reference.split(":")[0]
         verse = reference.split(":")[1]
 
@@ -67,22 +62,17 @@ client.on('message', async message => {
             returnMessage = "Reference not found :("
         }
 
-        //SEND MESSAGE!
-        message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage)
+        deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
 
     } else if (wholeChapRegex.test(messageText)) {
         returnMessage = ""
 
-        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
-            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
-            chapter = messageText.split(" ")[2]
-        } else { //All other cases
-            book = messageText.split(" ")[0].toLowerCase()
-            chapter = messageText.split(" ")[1]
-        }
+        bookAndRef = getBookandReference(messageText)
 
-        book = checkAbbriev(book)
+        book = bookAndRef[0]
+        chapter = bookAndRef[1]
 
+        //Retrieve all verses within the chapter and append it returnMessage
         try {
             count = 1
             for (const verseNum in bible[book][chapter]) {
@@ -97,69 +87,28 @@ client.on('message', async message => {
             returnMessage = ""
         }
 
-        if (returnMessage == "" || returnMessage === undefined) {
-            returnMessage = "Reference not found :("
-        }
+        returnMessage = messageCheck(returnMessage)
 
-        if (returnMessage.length > 1900) {
-            message.channel.send("**" + titleCase.titleCase(book) + " " + chapter + "**")
-            await new Promise(r => setTimeout(r, 100));
-
-            remainingMessage = returnMessage
-            startIndex = 0
-            endIndex = 1900
-
-            messageLength = returnMessage.length
-            charactersSent = 0;
-
-            messageNum = 1
-
-            while (messageLength - charactersSent > 1900) {
-                returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
-                startIndex = startIndex + 1900
-                endIndex = endIndex + 1900
-                charactersSent = charactersSent + 1900
-
-                message.channel.send(returnMessage)
-                await new Promise(r => setTimeout(r, 100));
-
-                if (messageNum == 4) {
-                    await new Promise(r => setTimeout(r, 5000));
-                    messageNum = 0
-                }
-
-                messageNum++;
-            }
-
-            returnMessage = remainingMessage.slice(startIndex);
-            message.channel.send(returnMessage)
-
-        } else {
-            message.channel.send("**" + titleCase.titleCase(book) + " " + chapter + "**\n" + returnMessage + "")//Append reference before sending
-        }
+        //Check if message is too long and handle message delivery
+        deliverMessage(titleCase.titleCase(book) + " " + chapter, returnMessage, message.channel)
 
     } else if (rangeWithinRegex.test(messageText)) {
         returnMessage = ""
 
-        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
-            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
-            reference = messageText.split(" ")[2]
-        } else { //All other cases
-            book = messageText.split(" ")[0].toLowerCase()
-            reference = messageText.split(" ")[1]
-        }
+        bookAndRef = getBookandReference(messageText)
 
-        book = checkAbbriev(book)
+        book = bookAndRef[0]
+        reference = bookAndRef[1]
 
         chapter = reference.split(":")[0]
         startVerse = parseInt(reference.split(":")[1].split("-")[0])
         endVerse = parseInt(reference.split(":")[1].split("-")[1])
         currentVerse = startVerse
 
+        //Retrieve all verses within the range and append it to returnMessage
         try {
             count = 1
             while (currentVerse <= endVerse) {
-                console.log(currentVerse)
                 if (count == 1) {
                     returnMessage = returnMessage + currentVerse + " " + bible[book][chapter][currentVerse]
                 } else {
@@ -173,58 +122,18 @@ client.on('message', async message => {
             console.log("error in retrieving range within chapter")
         }
 
-        if (returnMessage == "" || returnMessage === undefined) {
-            returnMessage = "Reference not found :("
-        }
+        returnMessage = messageCheck(returnMessage)
 
-        if (returnMessage.length > 1900) {
-            message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**")
-            await new Promise(r => setTimeout(r, 100));
+        //Check if message is too long and handle message delivery
+        deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
 
-            remainingMessage = returnMessage
-            startIndex = 0
-            endIndex = 1900
-
-            messageLength = returnMessage.length
-            charactersSent = 0;
-
-            messageNum = 1
-
-            while (messageLength - charactersSent > 1900) {
-                returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
-                startIndex = startIndex + 1900
-                endIndex = endIndex + 1900
-                charactersSent = charactersSent + 1900
-
-                message.channel.send(returnMessage)
-                await new Promise(r => setTimeout(r, 100));
-
-                if (messageNum == 4) {
-                    await new Promise(r => setTimeout(r, 5000));
-                    messageNum = 0
-                }
-
-                messageNum++;
-            }
-
-            returnMessage = remainingMessage.slice(startIndex);
-            message.channel.send(returnMessage)
-
-        } else {
-            message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**\n" + returnMessage + "") //Append reference before sending
-        }
     } else if (rangeAcrossRegex.test(messageText)) {
         returnMessage = ""
 
-        if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
-            book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
-            reference = messageText.split(" ")[2]
-        } else { //All other cases
-            book = messageText.split(" ")[0].toLowerCase()
-            reference = messageText.split(" ")[1]
-        }
+        bookAndRef = getBookandReference(messageText)
 
-        book = checkAbbriev(book)
+        book = bookAndRef[0]
+        reference = bookAndRef[1]
 
         startRef = reference.split("-")[0]
         endRef = reference.split("-")[1]
@@ -236,46 +145,96 @@ client.on('message', async message => {
         endVerse = parseInt(endRef.split(":")[1])
 
         //e.g. genesis 3:1-4:12 - would need to somehow find out what is the last verse of the current chapter... and future chapters...
+        //BIG TODO HERE
+        returnMessage = "Sorry, I can't do that yet :(" //temp message
 
-
-        if (returnMessage.length > 1900) {
-            message.channel.send("**" + titleCase.titleCase(book) + " " + reference + "**")
-            await new Promise(r => setTimeout(r, 100));
-
-            remainingMessage = returnMessage
-            startIndex = 0
-            endIndex = 1900
-
-            messageLength = returnMessage.length
-            charactersSent = 0;
-
-            messageNum = 1
-
-            while (messageLength - charactersSent > 1900) {
-                returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
-                startIndex = startIndex + 1900
-                endIndex = endIndex + 1900
-                charactersSent = charactersSent + 1900
-
-                message.channel.send(returnMessage)
-                await new Promise(r => setTimeout(r, 100));
-
-                if (messageNum == 4) {
-                    await new Promise(r => setTimeout(r, 5000));
-                    messageNum = 0
-                }
-
-                messageNum++;
-            }
-
-            returnMessage = remainingMessage.slice(startIndex);
-            message.channel.send(returnMessage)
-
-        } else {
-            message.channel.send("Sorry, I can't do that yet :(")
-        }
+        deliverMessage(titleCase.titleCase(book) + " " + reference, returnMessage, message.channel)
     }
 })
+
+//If message is over 1900 characters long, then use this function to split it. Returns an array of messages shorter than 1900 characters
+function messageSplit(returnMessage) {
+    remainingMessage = returnMessage
+    startIndex = 0
+    endIndex = 1900
+
+    messageLength = returnMessage.length
+    charactersSent = 0;
+
+    returnArray = []
+
+    while (messageLength - charactersSent > 1900) {
+        returnMessage = remainingMessage.slice(startIndex,endIndex) + "-";
+        startIndex = startIndex + 1900
+        endIndex = endIndex + 1900
+        charactersSent = charactersSent + 1900
+
+        returnArray.push(returnMessage)
+    }
+
+    //Push whatever is left of the message
+    returnMessage = remainingMessage.slice(startIndex);
+    returnArray.push(returnMessage)
+
+    return returnArray
+}
+
+//Checks if there is actually a message, and returns error message if not
+function messageCheck(messageText) {
+    if (returnMessage == "" || returnMessage === undefined) {
+        return "Reference not found :("
+    } else {
+        return messageText
+    }
+}
+
+//Separates the book and reference (or chapter), and returns them in an array [0] is book and [1] is reference
+function getBookandReference(messageText) {
+    if (messageText[0] >= '0' && messageText[0] <= '9') { //For books with numbers before them
+        book = messageText.split(" ")[0] + " " + messageText.split(" ")[1].toLowerCase()
+        reference = messageText.split(" ")[2]
+    } else { //All other cases
+        book = messageText.split(" ")[0].toLowerCase()
+        reference = messageText.split(" ")[1]
+    }
+
+    book = book.toLowerCase()
+    book = checkAbbriev(book)
+
+    return [book,reference]
+}
+
+//Handles message delivery - checks length of message and splits messages as appropriate
+function deliverMessage(title, returnMessage, channel) {
+    if (returnMessage.length > 1900) {
+        messageArray = messageSplit(returnMessage)
+        counter = 1
+
+        for (msg of messageArray) {
+            if (counter == 1)
+                packageAndSend(title, msg, channel)
+            else
+                packageAndSend("", msg, channel)
+
+            counter++
+        }
+
+    } else {
+        packageAndSend(title, returnMessage, channel)
+    }
+}
+
+//Packages messages in embed and sends them
+function packageAndSend(title, message, channel) {
+    const embedMessage = new Discord.MessageEmbed()
+        .setColor('#9932CC')
+        .setTitle(title)
+        .setDescription(message)
+        .setTimestamp()
+        .setFooter('Made for Tehillah')
+    
+    channel.send(embedMessage);
+}
 
 function checkAbbriev(bookname) {
     switch (bookname) {
