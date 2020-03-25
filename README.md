@@ -8,7 +8,8 @@ A discord bot that posts NIV bible passages when referenced in chat
         "token": "YOUR_BOTS_AUTH_TOKEN"
     }
 3. replace YOUR_BOTS_AUTH_TOKEN with the auth token you got in step 3 of the guide above
-4. run with: node bot.js
+4. run: npm install
+4. run: node bot.js
 
 # Use cases
 When you type a message of one of the following categories into a text server, BibleBoy will respond as appropriate
