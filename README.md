@@ -22,3 +22,5 @@ When you type a message of one of the following categories into a text server, B
 3. Range of verses wihtin a chapter (e.g. Gen 1:1-3)
 
 4. Range of verses crossing chapters (e.g. Gen 1:1-2:3)
+
+You may also provide multiple references by delimiting them with a semicolon. (e.g. Gen 1-2; John 3:16)
