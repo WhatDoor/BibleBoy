@@ -1,7 +1,7 @@
 # BibleBoy
 A discord bot that posts ESV bible passages when referenced in chat
 
-(You can produce NIV bible passages if you rename NIVBible.json to Bible.json)
+(You can produce NIV bible passages if you rename NIVbible.json to bible.json)
 
 # Usage
 1. Follow this guide until step 4 - https://www.digitaltrends.com/gaming/how-to-make-a-discord-bot/
